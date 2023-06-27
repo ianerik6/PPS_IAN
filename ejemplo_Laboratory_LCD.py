@@ -10,6 +10,7 @@ Created on Wed Jun  7 11:03:15 2023
 # Run these lines of code if this is your first time using this Jupyter Notebook
 #! pip install scikit-dsp-comm
 #! pip install scikit-commpy
+#este codigo es muy importante
 import adi
 Uri = "ip:192.168.1.31"
 sdr = adi.Pluto(Uri)
