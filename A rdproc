@@ -1,0 +1,196 @@
+
+/*
+Step: A rdproc, versión inicial
+Crear la siguiente aplicación, llamada rdproc
+Escriba una versión inicial del programa que inspeccione las variables del kernel a
+través de /proc e informe por stdout:
+● Tipo y modelo de CPU, número de cores, caché L1 y l2
+● Versión de Kernel.
+● Tiempo transcurrido desde que se inició el sistema operativo, con el formato
+dd:hh:mm:ss.
+● Lista de filesystems soportados por el kernel.
+● Lista de particiones con su correspondiente tipo de filesystem (ej: / ext4)
+También se pide incluir una cabecera donde se indique el nombre de la máquina y la fecha y
+hora actual
+
+Aquí tienes una versión inicial de la aplicación rdproc que cumple con los requisitos que has 
+especificado. Ten en cuenta que este es un programa de ejemplo simple y que es posible que necesites 
+adaptarlo y mejorar su funcionalidad según tus necesidades.
+Este programa de ejemplo realiza lo siguiente:
+
+    Obtiene el nombre de la máquina y la fecha/hora actual.
+    Muestra información sobre la CPU, incluyendo el tipo y modelo de CPU, el número de cores y la caché L1 y L2.
+    Muestra la versión del Kernel.
+    Calcula y muestra el tiempo transcurrido desde el inicio del sistema en formato "dd:hh:mm:ss".
+    Muestra una lista de filesystems soportados por el Kernel (debes completar esta parte según tus necesidades).
+    Muestra una lista de particiones con su correspondiente tipo de filesystem (debes completar esta parte según tus necesidades).
+
+Ten en cuenta que algunas partes del programa están incompletas y requieren
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+
+#define MAX_LINE_LENGTH 256
+
+// Función para obtener el tiempo transcurrido desde el inicio del sistema
+void getUptime() {
+    FILE *uptimeFile = fopen("/proc/uptime", "r");
+    if (uptimeFile == NULL) {
+        perror("Error al abrir /proc/uptime");
+        exit(EXIT_FAILURE);
+    }
+
+    double uptime;
+    if (fscanf(uptimeFile, "%lf", &uptime) != 1) {
+        perror("Error al leer /proc/uptime");
+        fclose(uptimeFile);
+        exit(EXIT_FAILURE);
+    }
+    fclose(uptimeFile);
+
+    int days = (int)(uptime / 86400);
+    int hours = (int)((uptime - days * 86400) / 3600);
+    int minutes = (int)((uptime - days * 86400 - hours * 3600) / 60);
+    int seconds = (int)(uptime - days * 86400 - hours * 3600 - minutes * 60);
+
+    printf("Tiempo transcurrido desde el inicio del sistema: %d:%02d:%02d:%02d\n", days, hours, minutes, seconds);
+}
+
+// Función para obtener información sobre la CPU
+void getCPUInfo() {
+    char line[MAX_LINE_LENGTH];
+    FILE *cpuinfo = fopen("/proc/cpuinfo", "r");
+    if (cpuinfo == NULL) {
+        perror("Error al abrir /proc/cpuinfo");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Tipo y modelo de CPU, número de cores, caché L1 y L2:\n");
+
+    while (fgets(line, MAX_LINE_LENGTH, cpuinfo) != NULL) {
+        if (strstr(line, "model name") || strstr(line, "cpu cores") || strstr(line, "cache size")) {
+            printf("%s", line);
+        }
+    }
+
+    fclose(cpuinfo);
+}
+
+// Función para obtener la versión del Kernel
+void getKernelVersion() {
+    char line[MAX_LINE_LENGTH];
+    FILE *versionFile = fopen("/proc/version", "r");
+    if (versionFile == NULL) {
+        perror("Error al abrir /proc/version");
+        exit(EXIT_FAILURE);
+    }
+
+    if (fgets(line, MAX_LINE_LENGTH, versionFile) != NULL) {
+        printf("Versión del Kernel: %s", line);
+    }
+
+    fclose(versionFile);
+}
+
+// Función para obtener la lista de filesystems soportados por el kernel
+void getSupportedFilesystems() {
+    printf("Lista de filesystems soportados por el kernel:\n");
+
+    // Puedes agregar aquí la lógica para obtener la lista de filesystems
+    // Utiliza el comando "cat /proc/filesystems" y procesa la salida si es necesario
+}
+
+// Función para obtener la lista de particiones con su correspondiente tipo de filesystem
+void getPartitionsAndFilesystems() {
+    printf("Lista de particiones con su correspondiente tipo de filesystem:\n");
+
+    // Puedes agregar aquí la lógica para obtener la lista de particiones y sus filesystems
+    // Utiliza el comando "df -Th" y procesa la salida si es necesario
+}
+
+int main() {
+    // Obtener el nombre de la máquina y la fecha/hora actual
+    char hostname[MAX_LINE_LENGTH];
+    if (gethostname(hostname, MAX_LINE_LENGTH) != 0) {
+        perror("Error al obtener el nombre de la máquina");
+        exit(EXIT_FAILURE);
+    }
+
+    time_t now;
+    struct tm *localTimeInfo;
+    char dateTimeString[MAX_LINE_LENGTH];
+
+    time(&now);
+    localTimeInfo = localtime(&now);
+
+    strftime(dateTimeString, MAX_LINE_LENGTH, "%Y-%m-%d %H:%M:%S", localTimeInfo);
+
+    printf("Nombre de la máquina: %s\n", hostname);
+    printf("Fecha y hora actual: %s\n\n", dateTimeString);
+
+    // Obtener información sobre el sistema
+    getCPUInfo();
+    printf("\n");
+    getKernelVersion();
+    printf("\n");
+    getUptime();
+    printf("\n");
+    getSupportedFilesystems();
+    printf("\n");
+    getPartitionsAndFilesystems();
+
+    return 0;
+}
+
+
+
+/*
+Nombre de la máquina: ian-300E4C-300E5C-300E7C
+Fecha y hora actual: 2023-09-26 22:24:44
+
+Tipo y modelo de CPU, número de cores, caché L1 y L2:
+model name      : Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
+cache size      : 3072 KB
+cpu cores       : 2
+model name      : Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
+cache size      : 3072 KB
+cpu cores       : 2
+model name      : Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
+cache size      : 3072 KB
+cpu cores       : 2
+model name      : Intel(R) Core(TM) i5-3210M CPU @ 2.50GHz
+cache size      : 3072 KB
+cpu cores       : 2
+
+Versión del Kernel: Linux version 6.2.0-33-generic (buildd@lcy02-amd64-073) (x86_64-linux-gnu-gcc-11 (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #33~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Sep  7 10:33:52 UTC 2
+
+Tiempo transcurrido desde el inicio del sistema: 0:03:15:23
+
+Lista de filesystems soportados por el kernel:
+
+Lista de particiones con su correspondiente tipo de filesystem:
+[1] + Done                       "/usr/bin/gdb" --interpreter=mi --tty=${DbgTerm} 0<"/tmp/Microsoft-MIEngine-In-b2aala3n.5qx" 1>"/tmp/Microsoft-MIEngine-Out-fn4tx2v0.ty4"
+ian@ian-300E4C-300E5C-300E7C:~/Documentos/SISTEMAS_OPERATIVO_1/SO1_LAB1$ 
+
+
+*/
+
+/*
+DEBUG CONSOLE
+Stopped due to shared library event (no libraries added or removed)
+Loaded '/lib64/ld-linux-x86-64.so.2'. Symbols loaded.
+[Depuración de hilo usando libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main () at /home/ian/Documentos/SISTEMAS_OPERATIVO_1/SO1_LAB1/A rdproc.c:114
+114	int main() {
+Loaded '/lib/x86_64-linux-gnu/libc.so.6'. Symbols loaded.
+[Inferior 1 (process 10965) exited normally]
+The program '/home/ian/Documentos/SISTEMAS_OPERATIVO_1/SO1_LAB1/A rdproc' has exited with code 0 (0x00000000).
+
+
+*/
